@@ -1,7 +1,8 @@
 {
 	"name": "osc-versionmanager",
-	"displayName": "osc-versionmanager",
-	"description": "OSC Version Manager",
+	"displayName": "Finvi Version Manager",
+	"description": "Version Manager",
+	"icon" : "thisisfine128.png",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.59.0"
@@ -11,17 +12,22 @@
 	],
 	"activationEvents": [
 		"onCommand:osc-versionmanager.addalltotask",
-		"onCommand:osc-versionmanager.addtotask"
+		"onCommand:osc-versionmanager.addtotask",
+		"onCommand:osc-versionmanager.removefromtask"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "osc-versionmanager.addtotask",
-				"title": "OSC VM: Add to Task"
+				"title": "Version Manager: Add to Task"
 			},{
 				"command": "osc-versionmanager.addalltotask",
-				"title": "OSC VM: Add all open files to Task"
+				"title": "Version Manager: Add all open files to Task"
+			},
+			{
+				"command": "osc-versionmanager.removefromtask",
+				"title": "Version Manager: Remove from task"
 			}
 		],
 		"configuration": {
