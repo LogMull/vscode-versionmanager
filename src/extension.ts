@@ -8,8 +8,6 @@ let showKeyword="Show Output";
 const configuration = vscode.workspace.getConfiguration('versionmanager');
 
 
-
-
 // ---------------- Plugin core ----------------
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -24,15 +22,18 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('osc-versionmanager.addtotask', () => {
-	//	return
 		addCurrentFileToTask();
 	});
 	
 	context.subscriptions.push(disposable);
 
-
 	disposable = vscode.commands.registerCommand('osc-versionmanager.addalltotask', () => {
 		checkOpenNamespaces();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('osc-versionmanager.removefromtask', () => {
+		removeCurrentFileFromTask();
 	});
 	context.subscriptions.push(disposable);
 
@@ -66,6 +67,7 @@ function addCurrentFileToTask(){
 		console.log(selection)
 		if (selection.doShowAll){
 			promptForTasks(auth,true).then((selection: { taskObj: { task: any; }; }) => {
+				if (!selection) return;
 				addElementToTask(selection.taskObj.task,valInfo.elType,valInfo.elName);
 			});
 			return;
@@ -74,10 +76,41 @@ function addCurrentFileToTask(){
 	})
 	
 }
+/// Remove the currently opened file from a VM Task
+function removeCurrentFileFromTask() {
+	let currentFile: vscode.Uri;
+	if (vscode.window.activeTextEditor) {
+		currentFile = vscode.window.activeTextEditor.document.uri
+	}
+	else {
+		vscode.window.showErrorMessage("No current class or routine");
+		return;
+	}
+	const valInfo = verifyFileURI(currentFile);
+	if (!valInfo.valid) {
+		vscode.window.showErrorMessage(valInfo.validationMessage);
+		return;
+	}
+	// Now get the authority of the current file, so we know where to pull tasks from
+	const auth = getNamespaceFromURI(currentFile);
+	// The file name and type are now known and valid, prompt the user for a list of tasks
+	promptForTasks(auth,false,valInfo.elType,valInfo.elName).then((selection: { taskObj: { task: any; }; doShowAll: any; }) => {
+		if (!selection) return;
+		console.log(selection)
+		if (selection.doShowAll) {
+			promptForTasks(auth, true, valInfo.elType, valInfo.elName).then((selection: { taskObj: { task: any; }; }) => {
+				if (!selection) return;
+				removeElementFromTask(selection.taskObj.task, valInfo.elType, valInfo.elName);
+			});
+			return;
+		}
+		removeElementFromTask(selection.taskObj.task, valInfo.elType, valInfo.elName);
+	})
 
-// Show the user all of the open text editors and allow them to select what should be added to a task
+}
+
+/// Show the user all of the open text editors and allow them to select what should be added to a task
 function checkOpenNamespaces(){
-// LCM 
 // Get list of all tasks
 // Verify they all belong to the same dev nsp, if not cancel
 	// All elements must be added to the same task, however, each workspace can have multiple namespaces open at once
@@ -101,8 +134,6 @@ function checkOpenNamespaces(){
 			lastNs=ns; // Keep track of the last known NS - if there's only one, that will make it easier to reference later
 		}
 		namespaces[ns].push({"document":docUri,"valInfo":valInfo});
-		
-		
 	}
 	console.log("Open Namespaces, ", namespaces)
 	// namespaces now contains all documents sorted by namespace.
@@ -114,8 +145,6 @@ function checkOpenNamespaces(){
 			list.push({
 				label: ns,
 				uris:namespaces[ns]
-				
-
 			});
 		}
 		vscode.window.showQuickPick(list,
@@ -141,31 +170,29 @@ function selectFilesToAdd(namespace:string,selection:[any]){
 	vscode.window.showQuickPick(list,
 		{ placeHolder: 'Select all elements to add.',canPickMany:true })
 		.then((selected)=>{
-			console.log(selected)
+			// If the picklist was clicked off of instead of given a selection, just stop
+			if (!selected) return;
 			promptForTasks(namespace).then((task: { doShowAll: any; taskObj: { task: any; }; })=>{
 				if (task.doShowAll) {
 					promptForTasks(namespace, true).then((selection: any) => {
-						var message = `Adding the following to ${task.taskObj.task}`;
-						outputChannel.appendLine(message)
+						// For every element, try to add it to the task
 						for (const el of selected) {
-							outputChannel.appendLine(`${el.info.elType} ${el.info.elName}`);
+							addElementToTask(selection.taskObj.task, el.info.elType, el.info.elName);
 						}
-						vscode.window.showInformationMessage("Elements would be added, check output for details")//, showKeyword).then(selection => notificationClicked(selection))
 					});
 					return
 				}
-				var message = `Adding the following to ${task.taskObj.task}`;
-				outputChannel.appendLine(message)
+				// For every element, try to add it to the task
 				for (const el of selected){
-					outputChannel.appendLine(`${ el.info.elType } ${ el.info.elName }`);
+					addElementToTask(task.taskObj.task, el.info.elType, el.info.elName);
 				}
-				vscode.window.showInformationMessage("Elements would be added, check output for details")//, showKeyword).then(selection => notificationClicked(selection))
 			})
 
 		});
 }
 // Prompt the user for a task to add elements to
-function promptForTasks(namespace: string = "", allUsers = false) {
+function promptForTasks(namespace: string = "", allUsers = false,elType:string="",elName:string="") {
+	const configuration = vscode.workspace.getConfiguration('versionmanager');
 	// Not likely to be a large impact, but always get the settings for every call so that updates are immediately reflected.
 	const currentUser: string = configuration.get('request.user');
 	const cacheUser: string = configuration.get('server.cacheUser');
@@ -182,8 +209,10 @@ function promptForTasks(namespace: string = "", allUsers = false) {
 	}
 	console.log(user)
 	// Build the request URL
-	const url = `https://dev.ber2012.com/vm/taskService/getTasks/${user}/${incNew?1:0}/${incHold?1:0}`;
-
+	let url = `https://dev.ber2012.com/vm/taskService/getTasks/${user}/${incNew?1:0}/${incHold?1:0}`;
+	if (elType!='' && elName!=''){
+		url+='/'+elType+'/'+elName;
+	}
 	return axios({
 		method: 'get',
 		'url': url,
@@ -192,7 +221,7 @@ function promptForTasks(namespace: string = "", allUsers = false) {
 			username:cacheUser,
 			password:cachePassword
 		}
-	}) // LCM TODO - Add graceful rejection, likely due to credientials (401) or a server unreachable
+	})
 		.then((response: { data: { children: any; }; }) => {
 			let data = response.data.children;
 			console.log(vscode.workspace.workspaceFolders);
@@ -218,85 +247,35 @@ function promptForTasks(namespace: string = "", allUsers = false) {
 				list.push({
 					"label": task.task + " - " + task.jira,
 					"description": task.desc,
-					"detail": task.owner + " " + task.devNsp,
+					"detail": `${task.owner} ${task.devNsp} (${task.comp})`,
 					"taskObj": task
 				})
 			}
 			// If the user is specified, show the option to show all users
-			if (user.length) {
+			if (user.length && !allUsers) {
 				list.push({
 					"label": "See Tasks for All Users",
 					"detail": "Showing only for " + user,
 					"doShowAll": true
 				})
 			}
-
+			if (list.length==0){
+				const message = 'No tasks found';
+				outputChannel.appendLine(message);
+				outputChannel.appendLine('');
+				vscode.window.showInformationMessage(message);
+				return;
+			}
 			return vscode.window.showQuickPick(list,
 				{ placeHolder: 'Select a task.' });
 
-		});
+		}).catch((response) => handleRejectedAPI(response));
 
 
 }
-function promptForTasksOld(namespace: string = "", allUsers = false){
-	
-		return axios({method:'get',
-		'url':"https://dev.ber2012.com/csp/vm/vm.web.service.csp.GetTasks.cls",
-		'repsonseType':'json'})
-		.then((response: { data: { children: any; }; })=>{
-			let data = response.data.children;
-			console.log(vscode.workspace.workspaceFolders);
-			// If a namespace is provided, use it to filter
-			// Otherwise, filter to all available namespaces in the workspace 
-			let namespaces = [];
-			if (namespace!==''){
-				namespaces.push(namespace)
-			}else{
-				// Get a list of all of the namespaces currently open in this workspace
-				for (let workspace of vscode.workspace.workspaceFolders) {
-					namespaces.push(getNamespaceFromURI(workspace.uri))
-				}
-			}
-			console.log(`Namespaces: ${namespaces}`);
-			let list =[];
-			let user:string="";
-			if (!allUsers){
-				user= vscode.workspace.getConfiguration('VersionManager').get("user");
-			}
-			console.log("User:" +user)
-			// Iterate over each task
-			for (const task of data){
-				// Only show tasks that are in our active dev statuses
-				if (!["NEW", "DEV", "QC", "QA"].includes(task.status) ) continue;
-				// Filter tasks that do not share the same dev namespace as what we have listed
-				// LCM TODO - figure out what authority the current file has and match that
-				if (!namespaces.includes(task.devNsp)) continue;
-				if (user.length && user!=task.asgTo && user!=task.owner) continue;
-				list.push({
-					"label": task.task + " - " + task.jira,
-					"description": task.desc,
-					"detail": task.owner + " " + task.devNsp,
-					"taskObj":task
-				})
-			}
-			// If the user is specified, show the option to show all users
-			if (user.length){
-				list.push({
-					"label": "See Tasks for All Users",
-					"detail": "Showing only for "+user,
-					"doShowAll":true
-				})
-			}
-
-			return vscode.window.showQuickPick(list,
-				{ placeHolder: 'Select a task.' });
-			
-		});
-		
-		
-	}
-
+/// Given the task, element type and element name, add the specified element to the task
 function addElementToTask(taskId: any,elType: string,elName: string):void{
+	const configuration = vscode.workspace.getConfiguration('versionmanager');
 	const currentUser: string = configuration.get('request.user');
 	const cacheUser: string = configuration.get('server.cacheUser');
 	const cachePassword: string = configuration.get('server.cachePassword');
@@ -311,7 +290,7 @@ function addElementToTask(taskId: any,elType: string,elName: string):void{
 			username: cacheUser,
 			password: cachePassword
 		}
-	}) // LCM TODO - Add graceful rejection, likely due to credientials (401) or a server unreachable
+	})
 		.then((restResponse) => {
 			const response = restResponse.data;
 			console.log(response)
@@ -322,6 +301,39 @@ function addElementToTask(taskId: any,elType: string,elName: string):void{
 
 			}
 		})
+		.catch((response) => handleRejectedAPI(response));
+
+}
+
+/// Given the task, element type and element name, add the specified element to the task
+function removeElementFromTask(taskId: any, elType: string, elName: string): void {
+	const configuration = vscode.workspace.getConfiguration('versionmanager');
+	const currentUser: string = configuration.get('request.user');
+	const cacheUser: string = configuration.get('server.cacheUser');
+	const cachePassword: string = configuration.get('server.cachePassword');
+	// Build the request URL
+	const url = `https://dev.ber2012.com/vm/taskService/removeElement/${currentUser}/${taskId}/${elType}/${elName}`;
+	console.log(url)
+	axios({
+		method: 'post',
+		'url': url,
+		'repsonseType': 'json',
+		auth: {
+			username: cacheUser,
+			password: cachePassword
+		}
+	})
+		.then((restResponse) => {
+			const response = restResponse.data;
+			console.log(response)
+			if (response.isOk) {
+				outputChannel.appendLine(`${response.returnValue}`)
+				vscode.window.showInformationMessage(`${response.returnValue}`)//, showKeyword).then(selection => notificationClicked(selection))
+			} else {
+
+			}
+		})
+		.catch((response) => handleRejectedAPI(response));
 
 }
 // ---------------- Helpers ----------------
@@ -368,6 +380,23 @@ function notificationClicked(notificationValue: string){
 	if (notificationValue == showKeyword) {
 		outputChannel.show();
 	}
+}
+
+
+/// Common handler for when a rest request is rejected.
+function handleRejectedAPI(response){
+	const respObj = response.toJSON();
+	let message: string = respObj.message
+	if (respObj.status === 401) {
+		message = 'Request failed with status of 401, check you settings for the cacheUser and cachePassword.';
+	}
+	else if (respObj.status ===404){
+		message='Request failed with a status of 404 - could not find '+respObj.config.url;
+	}
+
+	vscode.window.showErrorMessage(message);
+	outputChannel.appendLine(message);
+	outputChannel.appendLine('');
 }
 
 
