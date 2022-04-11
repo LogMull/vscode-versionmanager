@@ -58,7 +58,7 @@
 				},"versionmanager.server.cachePassword": {
 					"order": 5,
 					"type": "string",
-					"default": false,
+					"default": null,
 					"description": "Cache user password, needed to perform REST calls"
 				}
 				
