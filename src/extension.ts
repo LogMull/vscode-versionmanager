@@ -245,8 +245,8 @@ function promptForTasks(namespace: string = "", allUsers = false,elType:string="
 				// LCM TODO - figure out what authority the current file has and match that
 				if (!namespaces.includes(task.devNsp)) continue;
 				list.push({
-					"label": task.task + " - " + task.jira,
-					"description": task.desc,
+					"label": `${task.task} - ${task.extId}`,
+					"description": `(${task.status}) ${task.desc}`,
 					"detail": `${task.owner} ${task.devNsp} (${task.comp})`,
 					"taskObj": task
 				})
