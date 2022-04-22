@@ -1,4 +1,6 @@
+# compiled vsix
 *.vsix
+
 # Logs
 logs
 *.log

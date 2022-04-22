@@ -20,8 +20,7 @@ This extension contributes the following settings:
 * `versionmanager.request.user`: Artiva User in the VM instance
 * `versionmanager.request.includeNew`: Include tasks in the NEW status
 * `versionmanager.request.includeHold`: Include tasks in the HLD status
-* `versionmanager.server.cacheUser`: Cache user - needed to authenicate REST requests
-* `versionmanager.server.cachePassword`: Cache password - needed to authenicate REST requests
+* `versionmanager.server.serverName` : Name of the server definition defined in the Intersystems Server Manager. Used to build the server's url and supply cache credentials
 
 ## Known Issues
 

@@ -7,17 +7,28 @@ let outputChannel: vscode.OutputChannel
 let showKeyword="Show Output";
 const configuration = vscode.workspace.getConfiguration('versionmanager');
 
-
+const extId = "intersystems-community.servermanager";
+let extension = vscode.extensions.getExtension(extId);
+const serverManagerApi = extension.exports;
 // ---------------- Plugin core ----------------
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+	
 	
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Version Manager Plugin is now active');
 	outputChannel = vscode.window.createOutputChannel("Version Manager")
-	
+	let server: string = configuration.get('serverName');
+	let validServer=false;
+	const allServerNames = await serverManagerApi.getServerNames();
+	console.log(server)
+	if (!server || !allServerNames.some(serverObj => serverObj.name==server)){
+		// If the cache username is not provided, prompt the user for a server
+		const serverName = await serverManagerApi.pickServer();
+		await configuration.update('serverName',serverName,false);
+	}
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -191,25 +202,21 @@ function selectFilesToAdd(namespace:string,selection:[any]){
 		});
 }
 // Prompt the user for a task to add elements to
-function promptForTasks(namespace: string = "", allUsers = false,elType:string="",elName:string="") {
-	const configuration = vscode.workspace.getConfiguration('versionmanager');
-	// Not likely to be a large impact, but always get the settings for every call so that updates are immediately reflected.
-	const currentUser: string = configuration.get('request.user');
-	const cacheUser: string = configuration.get('server.cacheUser');
-	const cachePassword: string = configuration.get('server.cachePassword');
-
+async function promptForTasks(namespace: string = "", allUsers = false,elType:string="",elName:string="") {
+	const serverInfo = await getServerInfo();
+	
 	const incNew: boolean = configuration.get('request.includeNew');
 	const incHold: boolean = configuration.get('request.includeHold');
 
 	// Determine what user to send the request for.
-	let user = currentUser;
+	let user = serverInfo.artivaUser;
 	if (allUsers){
 		// Empty string for the user id will get a list of tasks for all users
 		user=' '
 	}
 	console.log(user)
 	// Build the request URL
-	let url = `https://dev.ber2012.com/vm/taskService/getTasks/${user}/${incNew?1:0}/${incHold?1:0}`;
+	let url = `${serverInfo.server.scheme}://${serverInfo.server.host}/vm/taskService/getTasks/${user}/${incNew?1:0}/${incHold?1:0}`;
 	if (elType!='' && elName!=''){
 		url+='/'+elType+'/'+elName;
 	}
@@ -218,8 +225,8 @@ function promptForTasks(namespace: string = "", allUsers = false,elType:string="
 		'url': url,
 		'repsonseType': 'json',
 		auth:{
-			username:cacheUser,
-			password:cachePassword
+			username:serverInfo.cacheUser,
+			password:serverInfo.cachePassword
 		}
 	})
 		.then((response: { data: { children: any; }; }) => {
@@ -274,13 +281,13 @@ function promptForTasks(namespace: string = "", allUsers = false,elType:string="
 
 }
 /// Given the task, element type and element name, add the specified element to the task
-function addElementToTask(taskId: any,elType: string,elName: string):void{
-	const configuration = vscode.workspace.getConfiguration('versionmanager');
-	const currentUser: string = configuration.get('request.user');
-	const cacheUser: string = configuration.get('server.cacheUser');
-	const cachePassword: string = configuration.get('server.cachePassword');
+async function addElementToTask(taskId: any,elType: string,elName: string){
+	const serverInfo = await getServerInfo();
+	const currentUser: string = serverInfo.artivaUser
+	const cacheUser: string = serverInfo.cacheUser
+	const cachePassword: string = serverInfo.cachePassword
 	// Build the request URL
-	const url = `https://dev.ber2012.com/vm/taskService/addElement/${currentUser}/${taskId}/${elType}/${elName}`;
+	const url = `${serverInfo.server.scheme}://${serverInfo.server.host}/vm/taskService/addElement/${currentUser}/${taskId}/${elType}/${elName}`;
 	console.log(url)
 	axios({
 		method: 'post',
@@ -306,13 +313,12 @@ function addElementToTask(taskId: any,elType: string,elName: string):void{
 }
 
 /// Given the task, element type and element name, add the specified element to the task
-function removeElementFromTask(taskId: any, elType: string, elName: string): void {
-	const configuration = vscode.workspace.getConfiguration('versionmanager');
-	const currentUser: string = configuration.get('request.user');
-	const cacheUser: string = configuration.get('server.cacheUser');
-	const cachePassword: string = configuration.get('server.cachePassword');
-	// Build the request URL
-	const url = `https://dev.ber2012.com/vm/taskService/removeElement/${currentUser}/${taskId}/${elType}/${elName}`;
+async function removeElementFromTask(taskId: any, elType: string, elName: string) {
+	const serverInfo = await getServerInfo();
+	const currentUser: string = serverInfo.artivaUser
+	const cacheUser: string = serverInfo.cacheUser
+	const cachePassword: string = serverInfo.cachePassword
+	const url = `${serverInfo.server.scheme}://${serverInfo.server.host}/vm/taskService/removeElement/${currentUser}/${taskId}/${elType}/${elName}`;
 	console.log(url)
 	axios({
 		method: 'post',
@@ -382,6 +388,23 @@ function notificationClicked(notificationValue: string){
 	}
 }
 
+async function getServerInfo(){
+	const configuration = vscode.workspace.getConfiguration('versionmanager');
+	// Not likely to be a large impact, but always get the settings for every call so that updates are immediately reflected.
+	const currentUser: string = configuration.get('request.user');
+	const server: string = configuration.get('serverName');
+	const serverSpec = await serverManagerApi.getServerSpec(server);
+	const cacheUser: string = serverSpec.username
+	const cachePassword: string = serverSpec.password
+
+	return {
+		artivaUser:currentUser,
+		serverName:server,
+		cacheUser:cacheUser,
+		cachePassword:cachePassword,
+		server: serverSpec.webServer
+	}
+}
 
 /// Common handler for when a rest request is rejected.
 function handleRejectedAPI(response){

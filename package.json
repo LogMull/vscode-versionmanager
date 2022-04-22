@@ -3,13 +3,20 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon" : "thisisfine128.png",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
 	"categories": [
 		"Other"
 	],
+	"extensionDependencies": [
+		"intersystems-community.servermanager"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/username/repository.git"
+	},
 	"activationEvents": [
 		"onCommand:osc-versionmanager.addalltotask",
 		"onCommand:osc-versionmanager.addtotask",
@@ -50,16 +57,12 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Include tasks in the HLD status"
-				},"versionmanager.server.cacheUser": {
+					
+				},"versionmanager.serverName": {
 					"order":4,
 					"type": "string",
 					"default": null,
-					"description": "Cache user, needed to perform REST calls"
-				},"versionmanager.server.cachePassword": {
-					"order": 5,
-					"type": "string",
-					"default": null,
-					"description": "Cache user password, needed to perform REST calls"
+					"description": "Server from the Intersystems Server Manager. Provides the URL + login credentials."
 				}
 				
 			}
