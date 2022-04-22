@@ -3,7 +3,7 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon" : "thisisfine128.png",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -15,7 +15,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/username/repository.git"
+		"url": "git:https://github.com/LogMull/vscode-versionmanager.git"
 	},
 	"activationEvents": [
 		"onCommand:osc-versionmanager.addalltotask",
