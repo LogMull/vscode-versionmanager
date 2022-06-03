@@ -10,6 +10,7 @@ const configuration = vscode.workspace.getConfiguration('versionmanager');
 const extId = "intersystems-community.servermanager";
 let extension = vscode.extensions.getExtension(extId);
 const serverManagerApi = extension.exports;
+let vsContext: vscode.ExtensionContext;
 // ---------------- Plugin core ----------------
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -47,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		removeCurrentFileFromTask();
 	});
 	context.subscriptions.push(disposable);
-
+	vsContext = context;
 }
 
 // this method is called when your extension is deactivated
@@ -245,18 +246,25 @@ async function promptForTasks(namespace: string = "", allUsers = false,elType:st
 			}
 			console.log(`Namespaces: ${namespaces}`);
 			let list = [];
-
+			const lastTask = vsContext.globalState.get('lastTask');
+			
+		
 			console.log("User:" + user)
 			// Iterate over each task
 			for (const task of data) {
 				// LCM TODO - figure out what authority the current file has and match that
 				if (!namespaces.includes(task.devNsp)) continue;
-				list.push({
+				const taskObj = {
 					"label": `${task.task} - ${task.extId}`,
 					"description": `(${task.status}) ${task.desc}`,
 					"detail": `${task.owner} ${task.devNsp} (${task.comp})`,
 					"taskObj": task
-				})
+				};
+				if (task.task == lastTask ){
+					list.unshift(taskObj);
+				}else{
+					list.push(taskObj);
+				}
 			}
 			// If the user is specified, show the option to show all users
 			if (user.length && !allUsers) {
@@ -274,7 +282,7 @@ async function promptForTasks(namespace: string = "", allUsers = false,elType:st
 				return;
 			}
 			return vscode.window.showQuickPick(list,
-				{ placeHolder: 'Select a task.' });
+				{ placeHolder: 'Select a task.',title:`Active VM Tasks for ${allUsers?'All Users':user}`,matchOnDescription:true,matchOnDetail:true });
 
 		}).catch((response) => handleRejectedAPI(response));
 
@@ -309,7 +317,8 @@ async function addElementToTask(taskId: any,elType: string,elName: string){
 			}
 		})
 		.catch((response) => handleRejectedAPI(response));
-
+		
+		vsContext.globalState.update('lastTask',taskId);
 }
 
 /// Given the task, element type and element name, add the specified element to the task
@@ -340,6 +349,7 @@ async function removeElementFromTask(taskId: any, elType: string, elName: string
 			}
 		})
 		.catch((response) => handleRejectedAPI(response));
+	vsContext.globalState.update('lastTask', taskId);
 
 }
 // ---------------- Helpers ----------------

@@ -1,10 +1,13 @@
 # Change Log
 
+- 0.0.5 (6/03/22) >
+    - Plugin should now remember the last task an element was added to or removed from.  This remembered task will be at the start of the list.
+    - All text in the quick pick list should now be
 - 0.0.4 (4/22/22) >
-    Utilize the intersystems server manager extension - no more passwords in clear text
+    - Utilize the intersystems server manager extension - no more passwords in clear text
 - 0.0.3 >
-   Restore showing the Jira/FB external id in the quickpick
+    - Restore showing the Jira/FB external id in the quickpick
 - 0.0.2 >
-    Cache password no longer defaults to 'false'
+    - Cache password no longer defaults to 'false'
 - 0.0.1 >
-    Initial version.
+    - Initial version.
