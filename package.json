@@ -11,7 +11,8 @@
 		"Other"
 	],
 	"extensionDependencies": [
-		"intersystems-community.servermanager"
+		"intersystems-community.servermanager",
+		"intersystems.language-server"
 	],
 	"repository": {
 		"type": "git",
@@ -20,7 +21,8 @@
 	"activationEvents": [
 		"onCommand:osc-versionmanager.addalltotask",
 		"onCommand:osc-versionmanager.addtotask",
-		"onCommand:osc-versionmanager.removefromtask"
+		"onCommand:osc-versionmanager.removefromtask",
+		"onCommand:osc-versionmanager.gotosymbol"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -35,7 +37,11 @@
 			{
 				"command": "osc-versionmanager.removefromtask",
 				"title": "Version Manager: Remove from task"
+			},{
+				"command": "osc-versionmanager.gotosymbol",
+				"title": "Version Manager: goto"
 			}
+
 		],
 		"configuration": {
 			"title": "Version Manager",

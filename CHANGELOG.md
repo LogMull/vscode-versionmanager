@@ -1,8 +1,9 @@
 # Change Log
-
+- 0.0.6 (6/22/22) >
+    - Added goto functionality that mimics go to symbol with line offsets
 - 0.0.5 (6/03/22) >
     - Plugin should now remember the last task an element was added to or removed from.  This remembered task will be at the start of the list.
-    - All text in the quick pick list should now be
+    - All text in the quick pick list should now be searchable
 - 0.0.4 (4/22/22) >
     - Utilize the intersystems server manager extension - no more passwords in clear text
 - 0.0.3 >

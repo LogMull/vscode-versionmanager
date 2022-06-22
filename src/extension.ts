@@ -1,6 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { handleGotoSymbol } from './gotoSymbol';
+import { verifyFileURI } from './util';
 const axios = require('axios');
 
 let outputChannel: vscode.OutputChannel
@@ -48,6 +50,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		removeCurrentFileFromTask();
 	});
 	context.subscriptions.push(disposable);
+
+	// Not really the most appropriate place to do this kind of thing, but it should work
+	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol', () => {
+		handleGotoSymbol();
+	});
 	vsContext = context;
 }
 
@@ -67,7 +74,7 @@ function addCurrentFileToTask(){
 		return;
 	}
 	const valInfo = verifyFileURI(currentFile);
-	if (!valInfo.valid){
+	if (!valInfo.validForTask){
 		vscode.window.showErrorMessage(valInfo.validationMessage);
 		return;
 	}
@@ -99,7 +106,7 @@ function removeCurrentFileFromTask() {
 		return;
 	}
 	const valInfo = verifyFileURI(currentFile);
-	if (!valInfo.valid) {
+	if (!valInfo.validForTask) {
 		vscode.window.showErrorMessage(valInfo.validationMessage);
 		return;
 	}
@@ -136,7 +143,7 @@ function checkOpenNamespaces(){
 		let docUri =  doc.uri
 		let valInfo = verifyFileURI(docUri);
 		// If the document is not valid, skip it
-		if (!valInfo.valid) continue;
+		if (!valInfo.validForTask) continue;
 		// Keep track of the namespace for each open document.  If there is more than one, a 2nd list will need to be shown
 		let ns = getNamespaceFromURI(docUri)
 
@@ -357,40 +364,7 @@ async function removeElementFromTask(taskId: any, elType: string, elName: string
 function getNamespaceFromURI(fileURI: vscode.Uri): string {
 	return fileURI.authority.split(':')[1].toUpperCase();
 }
-// Given a file URI, determine if it is valid to add to a VM task
-function verifyFileURI(fileURI: vscode.Uri): { "valid": boolean, "elName": string, "elType": string, "validationMessage": string } {
-	let retVal = {
-		valid: false,
-		elName: "",
-		elType: "",
-		validationMessage: ""
-	}
-	// The current file can only be added if it actually one of our files.
-	// If the uri's scheme is not isfs, it is not one of ours
-	if (fileURI.scheme !== 'isfs') {
-		// LCM need a better message here, but this works for now
-		retVal.valid = false;
-		retVal.validationMessage = "Current file scheme is not isfs, unable to add to VM task."
 
-	} else {
-		retVal.valid = true;
-		// If the file belongs to ISFS, it came from our server, so figure out what it is
-		retVal.elName = fileURI.path.slice(1, -4); // All file names start with / which is not what we need, also strip off the extension
-		retVal.elName = retVal.elName.replace(/\//g, "."); // replace os/web/com/ to os.web.com
-		if (fileURI.path.endsWith('.cls')) {
-			retVal.elType = "SYCLASS";
-		} else if (fileURI.path.endsWith('.mac')) {
-			retVal.elType = "SYR"
-		} else if (fileURI.path.endsWith('.inc')) {
-			retVal.elType = "SYI"
-		} else {
-			retVal.valid = false;
-			retVal.validationMessage = 'Only .cls, .mac, or .inc files may be added to a VM task.'
-			return;
-		}
-	}
-	return retVal
-}
 
 function notificationClicked(notificationValue: string){
 	if (notificationValue == showKeyword) {
