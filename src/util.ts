@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { prvKey } from './sshKey';
 const axios = require('axios');
 const fs = require('fs');
 const https = require('https');
