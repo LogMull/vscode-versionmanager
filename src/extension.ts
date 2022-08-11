@@ -2,9 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { handleGotoSymbol } from './gotoSymbol';
-import { verifyFileURI } from './util';
+import { verifyFileURI, checkForUpdates, getServerInfo, handleRejectedAPI } from './util';
 const axios = require('axios');
-
+const extension_id ='undefined_publisher.osc-versionmanager';
 let outputChannel: vscode.OutputChannel
 let showKeyword="Show Output";
 const configuration = vscode.workspace.getConfiguration('versionmanager');
@@ -17,12 +17,14 @@ let vsContext: vscode.ExtensionContext;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-	
+	vsContext = context;
 	
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Version Manager Plugin is now active');
-	outputChannel = vscode.window.createOutputChannel("Version Manager")
+	outputChannel = vscode.window.createOutputChannel("Version Manager");
+	outputChannel.appendLine("VM Tools is now active.");
+
 	let server: string = configuration.get('serverName');
 	let validServer=false;
 	const allServerNames = await serverManagerApi.getServerNames();
@@ -55,7 +57,18 @@ export async function activate(context: vscode.ExtensionContext) {
 	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol', () => {
 		handleGotoSymbol();
 	});
-	vsContext = context;
+	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin', () => {
+		checkForUpdates(vsContext, outputChannel,false);
+	});
+
+	if (configuration.get('checkForUpdates')){
+		outputChannel.appendLine("Checking for updates in 30 seconds.");
+		setTimeout(() => {
+			checkForUpdates(vsContext, outputChannel, true);
+		}, 30000); // give it 30sec before checking
+	}
+	
+
 }
 
 // this method is called when your extension is deactivated
@@ -291,7 +304,7 @@ async function promptForTasks(namespace: string = "", allUsers = false,elType:st
 			return vscode.window.showQuickPick(list,
 				{ placeHolder: 'Select a task.',title:`Active VM Tasks for ${allUsers?'All Users':user}`,matchOnDescription:true,matchOnDetail:true });
 
-		}).catch((response) => handleRejectedAPI(response));
+		}).catch((response) => handleRejectedAPI(response, outputChannel));
 
 
 }
@@ -323,7 +336,7 @@ async function addElementToTask(taskId: any,elType: string,elName: string){
 
 			}
 		})
-		.catch((response) => handleRejectedAPI(response));
+		.catch((response) => handleRejectedAPI(response, outputChannel));
 		
 		vsContext.globalState.update('lastTask',taskId);
 }
@@ -355,7 +368,7 @@ async function removeElementFromTask(taskId: any, elType: string, elName: string
 
 			}
 		})
-		.catch((response) => handleRejectedAPI(response));
+		.catch((response) => handleRejectedAPI(response, outputChannel));
 	vsContext.globalState.update('lastTask', taskId);
 
 }
@@ -371,40 +384,3 @@ function notificationClicked(notificationValue: string){
 		outputChannel.show();
 	}
 }
-
-async function getServerInfo(){
-	const configuration = vscode.workspace.getConfiguration('versionmanager');
-	// Not likely to be a large impact, but always get the settings for every call so that updates are immediately reflected.
-	const currentUser: string = configuration.get('request.user');
-	const server: string = configuration.get('serverName');
-	const serverSpec = await serverManagerApi.getServerSpec(server);
-	const cacheUser: string = serverSpec.username
-	const cachePassword: string = serverSpec.password
-
-	return {
-		artivaUser:currentUser,
-		serverName:server,
-		cacheUser:cacheUser,
-		cachePassword:cachePassword,
-		server: serverSpec.webServer
-	}
-}
-
-/// Common handler for when a rest request is rejected.
-function handleRejectedAPI(response){
-	const respObj = response.toJSON();
-	let message: string = respObj.message
-	if (respObj.status === 401) {
-		message = 'Request failed with status of 401, check you settings for the cacheUser and cachePassword.';
-	}
-	else if (respObj.status ===404){
-		message='Request failed with a status of 404 - could not find '+respObj.config.url;
-	}
-
-	vscode.window.showErrorMessage(message);
-	outputChannel.appendLine(message);
-	outputChannel.appendLine('');
-}
-
-
-
