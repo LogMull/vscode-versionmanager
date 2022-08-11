@@ -1,4 +1,6 @@
 # Change Log
+- 0.1.0 (8/11/22) >
+    - The plugin may now self-update.
 - 0.0.6 (6/22/22) >
     - Added goto functionality that mimics go to symbol with line offsets
 - 0.0.5 (6/03/22) >

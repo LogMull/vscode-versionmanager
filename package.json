@@ -2,8 +2,8 @@
 	"name": "osc-versionmanager",
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
-	"icon" : "thisisfine128.png",
-	"version": "0.0.6",
+	"icon": "thisisfine128.png",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -19,29 +19,33 @@
 		"url": "git:https://github.com/LogMull/vscode-versionmanager.git"
 	},
 	"activationEvents": [
-		"onCommand:osc-versionmanager.addalltotask",
-		"onCommand:osc-versionmanager.addtotask",
-		"onCommand:osc-versionmanager.removefromtask",
-		"onCommand:osc-versionmanager.gotosymbol"
+		"onStartupFinished"
 	],
+	
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "osc-versionmanager.addtotask",
 				"title": "Version Manager: Add to Task"
-			},{
+			},
+			{
 				"command": "osc-versionmanager.addalltotask",
 				"title": "Version Manager: Add all open files to Task"
 			},
 			{
 				"command": "osc-versionmanager.removefromtask",
 				"title": "Version Manager: Remove from task"
-			},{
+			},
+			{
 				"command": "osc-versionmanager.gotosymbol",
 				"title": "Version Manager: goto"
+			},
+			{
+				"command": "osc-versionmanager.updateplugin",
+				"title": "Version Manager: Check for Updates"
 			}
-
+			
 		],
 		"configuration": {
 			"title": "Version Manager",
@@ -63,14 +67,20 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Include tasks in the HLD status"
-					
-				},"versionmanager.serverName": {
-					"order":4,
+				},
+				"versionmanager.serverName": {
+					"order": 4,
 					"type": "string",
 					"default": null,
 					"description": "Server from the Intersystems Server Manager. Provides the URL + login credentials."
+				},
+				"versionmanager.checkForUpdates": {
+					"order": 5,
+					"type": "boolean",
+					"default": true,
+					"description": "Automatically check for updates for VM Tools on startup."
 				}
-				
+
 			}
 		}
 	},
