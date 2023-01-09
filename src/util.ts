@@ -50,7 +50,6 @@ export function verifyFileURI(fileURI: vscode.Uri): { "validForTask": boolean,"v
 // Determine the most recent version of the plugin on the server.  If there is a newer version than our current one, download and install it
 export async function checkForUpdates(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel,automatic=true) { 
     const serverInfo = await getServerInfo();
-    const currentUser: string = serverInfo.artivaUser;
     const cacheUser: string = serverInfo.cacheUser;
     const cachePassword: string = serverInfo.cachePassword;
     const currVer = context.extension.packageJSON.version;
@@ -121,7 +120,10 @@ export async function checkForUpdates(context: vscode.ExtensionContext, outputCh
         // Not likely to be a large impact, but always get the settings for every call so that updates are immediately reflected.
         const currentUser: string = configuration.get('request.user');
         const server: string = configuration.get('serverName');
+
         const serverSpec = await serverManagerApi.getServerSpec(server);
+        // Get the password from the user...
+        await resolvePassword(serverSpec)
         const cacheUser: string = serverSpec.username
         const cachePassword: string = serverSpec.password
 
@@ -133,7 +135,22 @@ export async function checkForUpdates(context: vscode.ExtensionContext, outputCh
             server: serverSpec.webServer
         }
     }
-
+async function resolvePassword(serverSpec): Promise<void> {
+    const AUTHENTICATION_PROVIDER = "intersystems-server-credentials";
+    // This arises if setting says to use authentication provider
+    if (typeof serverSpec.password === "undefined") {
+        const scopes = [serverSpec.name, serverSpec.username || ""];
+        let session = await vscode.authentication.getSession(AUTHENTICATION_PROVIDER, scopes);
+        if (!session) {
+            session = await vscode.authentication.getSession(AUTHENTICATION_PROVIDER, scopes, { createIfNone: true });
+        }
+        if (session) {
+            // If original spec lacked username use the one obtained by the authprovider
+            serverSpec.username = serverSpec.username || session.scopes[1];
+            serverSpec.password = session.accessToken;
+        }
+    }
+}
 /// Common handler for when a rest request is rejected.
 export function handleRejectedAPI(response, outputChannel?) {
     const respObj = response.toJSON();

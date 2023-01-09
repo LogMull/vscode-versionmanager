@@ -1,4 +1,8 @@
 # Change Log
+- 0.1.1 (01/09/23) >
+    - Use new interface for the Intersystems Server Manager to retrieve cache connection info.
+        - Requires version 3.2 or newer.
+    - Should no longer prompt to select a server on workspace startup until a command is run
 - 0.1.0 (8/11/22) >
     - The plugin may now self-update.
 - 0.0.6 (6/22/22) >

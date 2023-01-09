@@ -25,43 +25,45 @@ export async function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("Version Manager");
 	outputChannel.appendLine("VM Tools is now active.");
 
-	let server: string = configuration.get('serverName');
-	let validServer=false;
-	const allServerNames = await serverManagerApi.getServerNames();
-	console.log(server)
-	if (!server || !allServerNames.some(serverObj => serverObj.name==server)){
-		// If the cache username is not provided, prompt the user for a server
-		const serverName = await serverManagerApi.pickServer();
-		await configuration.update('serverName',serverName,false);
-	}
+	
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('osc-versionmanager.addtotask', () => {
+		ensureServerIsSet();
 		addCurrentFileToTask();
 	});
 	
 	context.subscriptions.push(disposable);
 
 	disposable = vscode.commands.registerCommand('osc-versionmanager.addalltotask', () => {
+		ensureServerIsSet();
 		checkOpenNamespaces();
 	});
 	context.subscriptions.push(disposable);
 
 	disposable = vscode.commands.registerCommand('osc-versionmanager.removefromtask', () => {
+		ensureServerIsSet();
 		removeCurrentFileFromTask();
 	});
 	context.subscriptions.push(disposable);
 
 	// Not really the most appropriate place to do this kind of thing, but it should work
 	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol', () => {
+		ensureServerIsSet();
 		handleGotoSymbol();
 	});
 	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin', () => {
+		ensureServerIsSet()
 		checkForUpdates(vsContext, outputChannel,false);
 	});
 
 	if (configuration.get('checkForUpdates')){
+		let server: string = configuration.get('serverName');
+		if (!server){
+			outputChannel.appendLine("Cache Server is not specified, skipping automatic update check.");
+			return
+		}
 		outputChannel.appendLine("Checking for updates in 30 seconds.");
 		setTimeout(() => {
 			checkForUpdates(vsContext, outputChannel, true);
@@ -73,6 +75,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
+
+async function ensureServerIsSet(){
+	let server: string = configuration.get('serverName');
+	
+	console.log(server);
+	
+	const allServerNames = await serverManagerApi.getServerNames();
+	if (!server || !allServerNames.some(serverObj => serverObj.name == server)) {
+		// If the cache username is not provided, prompt the user for a server
+		const serverName = await serverManagerApi.pickServer();
+		await configuration.update('serverName', serverName, false);
+	}
+}
 
 // ---------------- Main Methods ----------------
 
