@@ -3,7 +3,7 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon": "thisisfine128.png",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -21,7 +21,6 @@
 	"activationEvents": [
 		"onStartupFinished"
 	],
-	
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
@@ -45,7 +44,6 @@
 				"command": "osc-versionmanager.updateplugin",
 				"title": "Version Manager: Check for Updates"
 			}
-			
 		],
 		"configuration": {
 			"title": "Version Manager",
@@ -80,7 +78,6 @@
 					"default": true,
 					"description": "Automatically check for updates for VM Tools on startup."
 				}
-
 			}
 		}
 	},
@@ -93,7 +90,8 @@
 		"test-watch": "tsc -watch -p ./",
 		"pretest": "npm run test-compile && npm run lint",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"uploadNewVersion": "node ./scripts/uploadNewVersion.ts"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
@@ -115,6 +113,7 @@
 	},
 	"dependencies": {
 		"axios": "^0.23.0",
-		"node-fetch": "^2.6.5"
+		"node-fetch": "^2.6.5",
+		"prompt-sync": "^4.2.0"
 	}
 }

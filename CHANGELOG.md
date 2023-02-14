@@ -1,4 +1,7 @@
 # Change Log
+- 0.1.2 (02/06/23) >
+    - Plugin methods should now correctly ensure a server is selected before running a command.
+    - If adding an element to a task fails, it shoud should the message returned from the server.
 - 0.1.1 (01/09/23) >
     - Use new interface for the Intersystems Server Manager to retrieve cache connection info.
         - Requires version 3.2 or newer.

@@ -29,32 +29,32 @@ export async function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('osc-versionmanager.addtotask', () => {
-		ensureServerIsSet();
+	let disposable = vscode.commands.registerCommand('osc-versionmanager.addtotask', async () => {
+		await ensureServerIsSet();
 		addCurrentFileToTask();
 	});
 	
 	context.subscriptions.push(disposable);
 
-	disposable = vscode.commands.registerCommand('osc-versionmanager.addalltotask', () => {
-		ensureServerIsSet();
+	disposable = vscode.commands.registerCommand('osc-versionmanager.addalltotask',async () => {
+		await ensureServerIsSet();
 		checkOpenNamespaces();
 	});
 	context.subscriptions.push(disposable);
 
-	disposable = vscode.commands.registerCommand('osc-versionmanager.removefromtask', () => {
-		ensureServerIsSet();
+	disposable = vscode.commands.registerCommand('osc-versionmanager.removefromtask',async () => {
+		await ensureServerIsSet();
 		removeCurrentFileFromTask();
 	});
 	context.subscriptions.push(disposable);
 
 	// Not really the most appropriate place to do this kind of thing, but it should work
-	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol', () => {
-		ensureServerIsSet();
+	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol',async () => {
+		await ensureServerIsSet();
 		handleGotoSymbol();
 	});
-	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin', () => {
-		ensureServerIsSet()
+	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin',async () => {
+		await ensureServerIsSet()
 		checkForUpdates(vsContext, outputChannel,false);
 	});
 
@@ -344,7 +344,7 @@ async function addElementToTask(taskId: any,elType: string,elName: string){
 		.then((restResponse) => {
 			const response = restResponse.data;
 			console.log(response)
-			if (response.isOk){
+			if (response.returnValue){
 				outputChannel.appendLine(`${response.returnValue}`)
 				vscode.window.showInformationMessage(`${response.returnValue}`)//, showKeyword).then(selection => notificationClicked(selection))
 			}else{
