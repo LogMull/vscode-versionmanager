@@ -3,7 +3,7 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon": "thisisfine128.png",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -114,6 +114,7 @@
 	"dependencies": {
 		"axios": "^0.23.0",
 		"node-fetch": "^2.6.5",
-		"prompt-sync": "^4.2.0"
+		"prompt-sync": "^4.2.0",
+		"xml-js": "^1.6.11"
 	}
 }
