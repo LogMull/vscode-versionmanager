@@ -3,6 +3,8 @@
 import * as vscode from 'vscode';
 import { handleGotoSymbol } from './gotoSymbol';
 import { verifyFileURI, checkForUpdates, getServerInfo, handleRejectedAPI } from './util';
+import * as oscFormatProvider from './formatProvider';
+
 const axios = require('axios');
 const extension_id ='undefined_publisher.osc-versionmanager';
 let outputChannel: vscode.OutputChannel
@@ -62,14 +64,21 @@ export async function activate(context: vscode.ExtensionContext) {
 		let server: string = configuration.get('serverName');
 		if (!server){
 			outputChannel.appendLine("Cache Server is not specified, skipping automatic update check.");
-			return
+			
+		}else{
+			outputChannel.appendLine("Checking for updates in 30 seconds.");
+			setTimeout(() => {
+				checkForUpdates(vsContext, outputChannel, true);
+			}, 30000); // give it 30sec before checking
 		}
-		outputChannel.appendLine("Checking for updates in 30 seconds.");
-		setTimeout(() => {
-			checkForUpdates(vsContext, outputChannel, true);
-		}, 30000); // give it 30sec before checking
 	}
 	
+	// Add in the document formatting handler.
+	vscode.languages.registerDocumentFormattingEditProvider('objectscript-class', {
+		provideDocumentFormattingEdits(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+			return oscFormatProvider.formatObjectScriptClass(document);
+		}
+	});
 
 }
 
