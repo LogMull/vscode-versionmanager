@@ -3,7 +3,7 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon": "thisisfine128.png",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -77,6 +77,12 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Automatically check for updates for VM Tools on startup."
+				},
+				"versionmanager.verifyDevNamespace": {
+					"order": 6,
+					"type": "boolean",
+					"default": true,
+					"description": "Local Namespace must match a task's Dev Namespace."
 				}
 			}
 		}
