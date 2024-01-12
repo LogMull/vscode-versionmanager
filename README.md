@@ -1,6 +1,7 @@
 # osc-versionmanager README
 
 Plugin to allow for easy integration with Version Manager.
+Also includes a variety of quality of line enhancements to make using VSCode easier with Objectscript.
 
 ## Features
 
@@ -19,6 +20,10 @@ goto
 Check for Updates
     Check the server for an updated version of the plugin
 
+Objectscript Class Formatting
+    Support for formatting XML XData using a custom ruleset.
+    Planned support for class comments, and inline javascript in the future.
+
 ## Extension Settings
 
 This extension contributes the following settings:
@@ -28,7 +33,14 @@ This extension contributes the following settings:
 * `versionmanager.request.includeHold`: Include tasks in the HLD status
 * `versionmanager.server.serverName` : Name of the server definition defined in the Intersystems Server Manager. Used to build the server's url and supply cache credentials
 * `versionmanager.checkForUpdates` : Allows the plugin to self update automatically after VS Code starts
+* `versionmanager.verifyDevNamespace` : Option to control what tasks are shown.  If true, the current namespace must match the task's development namespace.  Disabling this can be useful to local sandbox development.
 
 ## Known Issues
 
 Will not correctly limit tasks by the component when multiple components reside in a single namespace.  eg HCEE and HCTEMP elements are both in HCDEF
+Updates in VM may provide a lift in preventing elements from being added to multiple components, but caution should still be used.
+
+## External References
+XML Formatting https://www.npmjs.com/package/xml-js, both used as distributed and modified for our specific use case, permitted under the MIT Liscense.
+Intersystems Language Server, used for symbol recognition within classes and macros
+Intersystems Server Manager, used for authentication to the Version Manager namespace

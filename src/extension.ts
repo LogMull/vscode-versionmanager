@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { handleGotoSymbol } from './gotoSymbol';
 import { verifyFileURI, checkForUpdates, getServerInfo, handleRejectedAPI } from './util';
+
 const axios = require('axios');
 const extension_id ='undefined_publisher.osc-versionmanager';
 let outputChannel: vscode.OutputChannel
@@ -62,15 +63,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		let server: string = configuration.get('serverName');
 		if (!server){
 			outputChannel.appendLine("Cache Server is not specified, skipping automatic update check.");
-			return
+			
+		}else{
+			outputChannel.appendLine("Checking for updates in 30 seconds.");
+			setTimeout(() => {
+				checkForUpdates(vsContext, outputChannel, true);
+			}, 30000); // give it 30sec before checking
 		}
-		outputChannel.appendLine("Checking for updates in 30 seconds.");
-		setTimeout(() => {
-			checkForUpdates(vsContext, outputChannel, true);
-		}, 30000); // give it 30sec before checking
 	}
-	
-
 }
 
 // this method is called when your extension is deactivated
@@ -288,7 +288,8 @@ async function promptForTasks(namespace: string = "", allUsers = false,elType:st
 			// Iterate over each task
 			for (const task of data) {
 				// LCM TODO - figure out what authority the current file has and match that
-				if (!namespaces.includes(task.devNsp)) continue;
+				configuration.get('verifyDevNamespace')
+				if (!namespaces.includes(task.devNsp) && configuration.get('verifyDevNamespace')) continue;
 				const taskObj = {
 					"label": `${task.task} - ${task.extId}`,
 					"description": `(${task.status}) ${task.desc}`,

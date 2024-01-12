@@ -1,4 +1,10 @@
 # Change Log
+- 0.3.0 (1/12/24) >
+    - Removed formatting from plugin.  osc-language-server now contains this functionality
+- 0.2.1 (4/24/23) >
+    - Added option to allow seeing tasks that do not correspond to the same namespace as the current environment (verifyDevNamespace)
+- 0.2.0 (2/14/23) >
+    - Added XML formatting
 - 0.1.2 (02/06/23) >
     - Plugin methods should now correctly ensure a server is selected before running a command.
     - If adding an element to a task fails, it shoud should the message returned from the server.

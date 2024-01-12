@@ -12,20 +12,8 @@ const symbolKindIconMap={
 export async function handleGotoSymbol(){
     // Always assume the current document
     const activeEditor = vscode.window.activeTextEditor;
-    const currentFile =activeEditor.document;
-    if (!currentFile) return // should not allow symbol lookup if there's nothing selected
-    const valInfo = verifyFileURI(currentFile.uri);
-    // If the current file is valid to add to a VM task, the symbol lookup should work fine here.  If not, skip it.
-    if (!valInfo.validForSymbol){
-        return;
-    }
-    // Get a list of all of the symbols for the current document
-    const symbols = await getSymbols(currentFile);
-    const list = [];
-    let array = symbols;
-    if (symbols[0].kind==4){ // kind==4 means class, so the entries will be nested inside it's children
-        array = symbols[0].children
-    }
+    const array = await getFileSymbols();
+     const list = [];
     // Add each symbol to the quick pick
     for (let symbol of array){
         const symbolObj = {
@@ -61,6 +49,10 @@ export async function handleGotoSymbol(){
     // Get the current offset.
     let offset = await vscode.window.showInputBox({'prompt':'Enter line offset','placeHolder':'eg 5, -10, $ for last line, blank for start','validateInput':offsetValidation})
     let referenceFromEnd=false;
+    if ( typeof  offset == 'undefined'){
+        offset='0';
+    }
+    
     // If the end of the symbol is requested, offset is 0, but the ending point is used instead.
     if (offset=='$'){
         offset='0';
@@ -74,8 +66,33 @@ export async function handleGotoSymbol(){
 }
 
 // Use the language server to get the symboles in the document
-async function getSymbols(document: vscode.TextDocument): Promise<vscode.DocumentSymbol[]> {
+export async function getSymbols(document: vscode.TextDocument): Promise<vscode.DocumentSymbol[]> {
     return await vscode.commands.executeCommand<vscode.DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri) || [];
+}
+
+export async function getFileSymbols(document?: vscode.TextDocument): Promise<vscode.DocumentSymbol[]>{
+
+    let currentFile=document;
+    if (!currentFile){
+        const activeEditor = vscode.window.activeTextEditor;
+        currentFile = activeEditor.document;
+    }
+   
+    if (!currentFile) return // should not allow symbol lookup if there's nothing selected
+    const valInfo = verifyFileURI(currentFile.uri);
+    // If the current file is valid to add to a VM task, the symbol lookup should work fine here.  If not, skip it.
+    if (!valInfo.validForSymbol) {
+        return;
+    }
+    // Get a list of all of the symbols for the current document
+    const symbols = await getSymbols(currentFile);
+    const list = [];
+    let array = symbols;
+    if (symbols[0].kind == 4) { // kind==4 means class, so the entries will be nested inside it's children
+        array = symbols[0].children
+    }
+
+    return Promise.resolve(array);
 }
 
 // Given the document, desired symbol and line offset number, go to a symbol.
