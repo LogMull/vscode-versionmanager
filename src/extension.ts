@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { handleGotoSymbol } from './gotoSymbol';
 import { verifyFileURI, checkForUpdates, getServerInfo, handleRejectedAPI } from './util';
 
 const axios = require('axios');
@@ -49,11 +48,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(disposable);
 
-	// Not really the most appropriate place to do this kind of thing, but it should work
-	disposable = vscode.commands.registerCommand('osc-versionmanager.gotosymbol',async () => {
-		await ensureServerIsSet();
-		handleGotoSymbol();
-	});
 	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin',async () => {
 		await ensureServerIsSet()
 		checkForUpdates(vsContext, outputChannel,false);
