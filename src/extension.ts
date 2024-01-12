@@ -3,7 +3,6 @@
 import * as vscode from 'vscode';
 import { handleGotoSymbol } from './gotoSymbol';
 import { verifyFileURI, checkForUpdates, getServerInfo, handleRejectedAPI } from './util';
-import * as oscFormatProvider from './formatProvider';
 
 const axios = require('axios');
 const extension_id ='undefined_publisher.osc-versionmanager';
@@ -72,14 +71,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			}, 30000); // give it 30sec before checking
 		}
 	}
-	
-	// Add in the document formatting handler.
-	vscode.languages.registerDocumentFormattingEditProvider('objectscript-class', {
-		provideDocumentFormattingEdits(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
-			return oscFormatProvider.formatObjectScriptClass(document);
-		}
-	});
-
 }
 
 // this method is called when your extension is deactivated
@@ -297,7 +288,8 @@ async function promptForTasks(namespace: string = "", allUsers = false,elType:st
 			// Iterate over each task
 			for (const task of data) {
 				// LCM TODO - figure out what authority the current file has and match that
-				if (!namespaces.includes(task.devNsp)) continue;
+				configuration.get('verifyDevNamespace')
+				if (!namespaces.includes(task.devNsp) && configuration.get('verifyDevNamespace')) continue;
 				const taskObj = {
 					"label": `${task.task} - ${task.extId}`,
 					"description": `(${task.status}) ${task.desc}`,

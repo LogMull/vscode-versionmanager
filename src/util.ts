@@ -101,6 +101,9 @@ export async function checkForUpdates(context: vscode.ExtensionContext, outputCh
                                 vscode.commands.executeCommand('workbench.action.reloadWindow');
                             }
                         })
+                        file.on('error',  (error) => {
+                            console.log(`An error occured while writing to the file. Error: ${error.message}`);
+                        });
                     })                   
                 }
             }else{
