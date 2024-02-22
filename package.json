@@ -11,8 +11,7 @@
 		"Other"
 	],
 	"extensionDependencies": [
-		"intersystems-community.servermanager",
-		"intersystems.language-server"
+		"intersystems-community.servermanager"
 	],
 	"repository": {
 		"type": "git",
@@ -35,15 +34,8 @@
 			{
 				"command": "osc-versionmanager.removefromtask",
 				"title": "Version Manager: Remove from task"
-			},
-			{
-				"command": "osc-versionmanager.gotosymbol",
-				"title": "Version Manager: goto"
-			},
-			{
-				"command": "osc-versionmanager.updateplugin",
-				"title": "Version Manager: Check for Updates"
 			}
+
 		],
 		"configuration": {
 			"title": "Version Manager",
@@ -71,12 +63,6 @@
 					"type": "string",
 					"default": null,
 					"description": "Server from the Intersystems Server Manager. Provides the URL + login credentials."
-				},
-				"versionmanager.checkForUpdates": {
-					"order": 5,
-					"type": "boolean",
-					"default": true,
-					"description": "Automatically check for updates for VM Tools on startup."
 				},
 				"versionmanager.verifyDevNamespace": {
 					"order": 6,

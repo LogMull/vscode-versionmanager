@@ -26,5 +26,5 @@ This extension contributes the following settings:
 * `versionmanager.request.includeNew`: Include tasks in the NEW status
 * `versionmanager.request.includeHold`: Include tasks in the HLD status
 * `versionmanager.server.serverName` : Name of the server definition defined in the Intersystems Server Manager. Used to build the server's url and supply cache credentials
-* `versionmanager.checkForUpdates` : Allows the plugin to self update automatically after VS Code starts
+* `versionmanager.checkForUpdates` : Allows the plugin to self update automatically after VS Code starts. Temporarily disabled, will be reworked in the future.
 * `versionmanager.verifyDevNamespace` : Option to control what tasks are shown.  If true, the current namespace must match the task's development namespace.  Disabling this can be useful to local sandbox development.

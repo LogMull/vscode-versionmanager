@@ -48,6 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(disposable);
 
+	/*
 	disposable = vscode.commands.registerCommand('osc-versionmanager.updateplugin',async () => {
 		await ensureServerIsSet()
 		checkForUpdates(vsContext, outputChannel,false);
@@ -65,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}, 30000); // give it 30sec before checking
 		}
 	}
+	*/
 }
 
 // this method is called when your extension is deactivated
