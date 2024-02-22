@@ -3,7 +3,7 @@
 	"displayName": "Finvi Version Manager",
 	"description": "Version Manager",
 	"icon": "thisisfine128.png",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
